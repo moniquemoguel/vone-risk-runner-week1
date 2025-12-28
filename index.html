@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Risk Runner: The VONE Vault Heist (Week 1)</title>
+  <style>
+    :root {
+      --vone-blue: #4797cd;
+      --bg: #0b1220;
+      --card: rgba(255,255,255,0.08);
+      --text: rgba(255,255,255,0.92);
+      --muted: rgba(255,255,255,0.72);
+      --good: rgba(0, 255, 140, 0.16);
+      --warn: rgba(255, 193, 7, 0.18);
+      --bad: rgba(255, 82, 82, 0.16);
+      --border: rgba(255,255,255,0.14);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+      background: radial-gradient(1200px 600px at 20% 10%, rgba(71,151,205,0.25), transparent 60%),
+                  radial-gradient(1200px 600px at 80% 20%, rgba(255,255,255,0.10), transparent 55%),
+                  var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 18px;
+    }
+    .app {
+      width: min(920px, 100%);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      overflow: hidden;
+      background: rgba(0,0,0,0.28);
+      backdrop-filter: blur(8px);
+      box-shadow: 0 18px 50px rgba(0,0,0,0.35);
+    }
+    header {
+      padding: 16px 18px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .brand {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .brand h1 {
+      margin: 0;
+      font-size: 16px;
+      letter-spacing: 0.2px;
+    }
+    .brand p {
+      margin: 0;
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 12px;
+      user-select: none;
+      white-space: nowrap;
+    }
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--vone-blue);
+      box-shadow: 0 0 16px rgba(71,151,205,0.9);
+    }
+    main { padding: 16px 18px 18px; }
+    .grid {
+      display: grid;
+      grid-template-columns: 1.4fr 0.6fr;
+      gap: 14px;
+    }
+    @media (max-width: 860px) {
+      .grid { grid-template-columns: 1fr; }
+    }
+    .card {
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      background: var(--card);
+      padding: 14px;
+    }
+    .scene-title {
+      margin: 0 0 6px;
+      font-size: 18px;
+    }
+    .scene-text {
+      margin: 0 0 12px;
+      line-height: 1.45;
+      color: var(--muted);
+      font-size: 14px;
+      white-space: pre-wrap;
+    }
+    .choices { display: grid; gap: 10px; }
+    button.choice {
+      width: 100%;
+      text-align: left;
+      padding: 12px 12px;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      background: rgba(0,0,0,0.22);
+      color: var(--text);
+      cursor: pointer;
+      transition: transform 0.04s ease, border-color 0.12s ease;
+      font-size: 14px;
+      line-height: 1.25;
+    }
+    button.choice:hover { border-color: rgba(71,151,205,0.55); }
+    button.choice:active { transform: translateY(1px); }
+    button.choice[disabled] { opacity: 0.65; cursor: not-allowed; }
+    .feedback {
+      margin-top: 12px;
+      padding: 12px;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      background: rgba(0,0,0,0.20);
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.35;
+      white-space: pre-wrap;
+    }
+    .feedback.good { background: var(--good); color: rgba(255,255,255,0.92); }
+    .feedback.warn { background: var(--warn); color: rgba(255,255,255,0.92); }
+    .feedback.bad  { background: var(--bad);  color: rgba(255,255,255,0.92); }
+
+    .meter { display: grid; gap: 10px; }
+    .meter h3 {
+      margin: 0 0 6px;
+      font-size: 13px;
+      letter-spacing: 0.2px;
+      color: rgba(255,255,255,0.86);
+    }
+    .bar {
+      height: 10px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: rgba(0,0,0,0.18);
+      overflow: hidden;
+    }
+    .fill { height: 100%; background: var(--vone-blue); width: 50%; }
+    .stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 10px;
+    }
+    .stat {
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: rgba(0,0,0,0.18);
+      padding: 10px;
+    }
+    .stat p { margin: 0; color: var(--muted); font-size: 12px; }
+    .stat strong { display: block; font-size: 16px; color: var(--text); margin-top: 4px; }
+
+    .footer-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 12px;
+    }
+    .action {
+      border: 1px solid var(--border);
+      background: rgba(0,0,0,0.22);
+      color: var(--text);
+      padding: 10px 12px;
+      border-radius: 14px;
+      cursor: pointer;
+      font-size: 13px;
+    }
+    .action.primary {
+      background: rgba(71,151,205,0.24);
+      border-color: rgba(71,151,205,0.55);
+    }
+    .codebox {
+      margin-top: 10px;
+      display: grid;
+      gap: 8px;
+      border: 1px dashed rgba(255,255,255,0.30);
+      border-radius: 14px;
+      padding: 12px;
+      background: rgba(0,0,0,0.22);
+    }
+    .codebox .code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      font-size: 16px;
+      color: rgba(255,255,255,0.95);
+      letter-spacing: 0.4px;
+    }
+    .small { font-size: 12px; color: var(--muted); }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <div class="brand">
+        <h1>Risk Runner: The VONE Vault Heist</h1>
+        <p>Week 1 Simulation · Learn GRC by making decisions</p>
+      </div>
+      <div class="pill"><span class="dot"></span><span id="progressText">Scene 1 of 6</span></div>
+    </header>
+
+    <main>
+      <div class="grid">
+        <section class="card">
+          <h2 class="scene-title" id="sceneTitle"></h2>
+          <p class="scene-text" id="sceneText"></p>
+
+          <div class="choices" id="choices"></div>
+          <div class="feedback" id="feedback" style="display:none;"></div>
+
+          <div class="footer-actions" id="footerActions" style="display:none;">
+            <button class="action primary" id="nextBtn">Continue</button>
+            <button class="action" id="restartBtn">Restart</button>
+          </div>
+
+          <div id="endBlock" style="display:none;">
+            <div class="feedback good" id="endSummary"></div>
+            <div class="codebox">
+              <div class="small">Completion Code (paste this into VONE):</div>
+              <div class="code" id="completionCode"></div>
+              <div class="footer-actions">
+                <button class="action primary" id="copyBtn">Copy Code</button>
+                <button class="action" id="restartBtn2">Play Again</button>
+              </div>
+              <div class="small">Tip: Your reflections matter. Explain your reasoning, not just your final score.</div>
+            </div>
+          </div>
+        </section>
+
+        <aside class="card">
+          <div class="meter">
+            <div>
+              <h3>Trust</h3>
+              <div class="bar"><div class="fill" id="trustFill"></div></div>
+            </div>
+            <div>
+              <h3>Risk (lower is better)</h3>
+              <div class="bar"><div class="fill" id="riskFill"></div></div>
+            </div>
+            <div>
+              <h3>Readiness</h3>
+              <div class="bar"><div class="fill" id="readyFill"></div></div>
+            </div>
+          </div>
+
+          <div class="stats">
+            <div class="stat">
+              <p>Current Rank</p>
+              <strong id="rankText">—</strong>
+            </div>
+            <div class="stat">
+              <p>Score</p>
+              <strong id="scoreText">0</strong>
+            </div>
+          </div>
+
+          <p class="small" style="margin-top:12px;">
+            You’re the “Trust Architect.” Your job isn’t to say “no.” Your job is to protect the vault while keeping the business moving.
+          </p>
+        </aside>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    // Week 1: GRC fundamentals taught through consequences (no jargon dumps).
+    const scenes = [
+      {
+        title: "Scene 1: The Invite",
+        text: "A startup just signed a partnership deal. The partner asks one question:\n\n“Can we trust you with data?”\n\nYour CEO says: “We need GRC… but make it fast.”\n\nWhat do you do first?",
+        choices: [
+          {
+            label: "Create a simple ‘who decides what’ map (roles + responsibilities) before anything else.",
+            delta: { trust: +2, risk: -1, ready: +2 },
+            feedback: "LOCK CLICKED.\nGovernance first. When roles are clear, decisions get consistent. That’s the backbone of GRC."
+          },
+          {
+            label: "Buy a security tool immediately so you can say you have controls.",
+            delta: { trust: 0, risk: 0, ready: +1 },
+            feedback: "FLASHY… but shaky.\nTools help, but without governance, nobody knows how to use them consistently."
+          },
+          {
+            label: "Draft a long policy document covering everything in one shot.",
+            delta: { trust: +1, risk: -1, ready: 0 },
+            feedback: "RESPECTABLE, but slow.\nPolicies matter, but Week 1 GRC wins come from clarity and cadence."
+          }
+        ]
+      },
+      {
+        title: "Scene 2: The Vendor Whisper",
+        text: "A vendor offers a free tool that needs access to customer data.\nThey say: “Everyone uses us.”\n\nWhat’s your move?",
+        choices: [
+          {
+            label: "Approve access now. You can ‘fix governance later’ if anything happens.",
+            delta: { trust: -2, risk: +3, ready: -1 },
+            feedback: "ALARM TRIGGERED.\nThat’s how risk becomes reality. GRC is about decisions before damage."
+          },
+          {
+            label: "Run a lightweight vendor risk check: what data, why, how stored, retention, and exit plan.",
+            delta: { trust: +2, risk: -2, ready: +2 },
+            feedback: "SMART MOVE.\nThat’s GRC in action: risk-aware progress without stopping the business."
+          },
+          {
+            label: "Block the vendor completely without explanation.",
+            delta: { trust: -1, risk: -1, ready: 0 },
+            feedback: "SAFE… but costly.\nGRC isn’t just ‘no.’ It’s ‘yes, with conditions.’"
+          }
+        ]
+      },
+      {
+        title: "Scene 3: The Policy Door",
+        text: "Teams are improvising. Passwords are being shared in chat. Files are stored everywhere.\n\nWhat’s the first rule you set?",
+        choices: [
+          {
+            label: "One rule: No sensitive data in chat. Use approved storage only. Make it easy and clear.",
+            delta: { trust: +2, risk: -2, ready: +2 },
+            feedback: "CLEAN AND EFFECTIVE.\nGood governance starts with a few rules that people can actually follow."
+          },
+          {
+            label: "Write 25 rules and send them as a PDF. People should just comply.",
+            delta: { trust: 0, risk: 0, ready: -1 },
+            feedback: "INFORMATION OVERLOAD.\nGRC fails when it’s unreadable. Start small and enforce consistently."
+          },
+          {
+            label: "Ignore it for now. You’ll handle it once the product launch is done.",
+            delta: { trust: -2, risk: +2, ready: -1 },
+            feedback: "RISK GROWS QUIETLY.\nDelay turns small issues into incidents."
+          }
+        ]
+      },
+      {
+        title: "Scene 4: The Control Switch",
+        text: "The CEO asks: “Can we pass a compliance check next month?”\n\nWhat do you say?",
+        choices: [
+          {
+            label: "“We can show readiness by proving our controls work, even if we’re not perfect yet.”",
+            delta: { trust: +2, risk: -1, ready: +2 },
+            feedback: "LEADERSHIP SIGNAL.\nCompliance is evidence. Controls are the engine."
+          },
+          {
+            label: "“Yes, if we create a checklist and say everything is done.”",
+            delta: { trust: -3, risk: +2, ready: -1 },
+            feedback: "DANGEROUS.\nCheckbox compliance collapses under real questions."
+          },
+          {
+            label: "“No. We should wait until we can do it like big companies.”",
+            delta: { trust: -1, risk: 0, ready: 0 },
+            feedback: "HONEST, but not strategic.\nGRC can be phased. Readiness is a journey with milestones."
+          }
+        ]
+      },
+      {
+        title: "Scene 5: The Incident Spark",
+        text: "An unusual login attempt hits an admin account.\nIt might be nothing… or it might be the beginning.\n\nWhat’s your immediate action?",
+        choices: [
+          {
+            label: "Log it, notify the right people, and document what you did (even if it ends up being a false alarm).",
+            delta: { trust: +2, risk: -2, ready: +2 },
+            feedback: "SOLID DISCIPLINE.\nGRC loves patterns. Documentation creates learning and accountability."
+          },
+          {
+            label: "Ignore it unless something breaks. You don’t want to cause panic.",
+            delta: { trust: -2, risk: +2, ready: -1 },
+            feedback: "SILENCE IS RISK.\nIncidents aren’t just technical. They’re governance moments."
+          },
+          {
+            label: "Reset every password immediately and lock everyone out.",
+            delta: { trust: -1, risk: -1, ready: +1 },
+            feedback: "OVERCORRECTION.\nControls must be proportional. Containment is good, chaos is not."
+          }
+        ]
+      },
+      {
+        title: "Scene 6: The Boardroom Mirror",
+        text: "You have 60 seconds with leadership.\nWhat’s your Week 1 GRC message?",
+        choices: [
+          {
+            label: "“Trust is earned through consistent decisions: clear roles, simple rules, and evidence that controls work.”",
+            delta: { trust: +3, risk: -1, ready: +2 },
+            feedback: "MIC DROP.\nThat’s the heart of GRC: governance + risk thinking + control evidence."
+          },
+          {
+            label: "“We need more tools.”",
+            delta: { trust: 0, risk: 0, ready: +1 },
+            feedback: "INCOMPLETE.\nTools are part of it, not the story."
+          },
+          {
+            label: "“We should avoid audits.”",
+            delta: { trust: -2, risk: +1, ready: 0 },
+            feedback: "WRONG DIRECTION.\nGRC prepares you for scrutiny; it doesn’t hide you from it."
+          }
+        ]
+      }
+    ];
+
+    // State
+    let sceneIndex = 0;
+    let trust = 50;    // 0..100 (higher better)
+    let risk = 50;     // 0..100 (lower better)
+    let ready = 50;    // 0..100 (higher better)
+    let score = 0;
+    let locked = false;
+
+    // UI
+    const sceneTitleEl = document.getElementById("sceneTitle");
+    const sceneTextEl = document.getElementById("sceneText");
+    const choicesEl = document.getElementById("choices");
+    const feedbackEl = document.getElementById("feedback");
+    const footerActionsEl = document.getElementById("footerActions");
+    const nextBtn = document.getElementById("nextBtn");
+    const restartBtn = document.getElementById("restartBtn");
+    const restartBtn2 = document.getElementById("restartBtn2");
+    const endBlock = document.getElementById("endBlock");
+    const endSummary = document.getElementById("endSummary");
+    const completionCodeEl = document.getElementById("completionCode");
+    const copyBtn = document.getElementById("copyBtn");
+
+    const trustFill = document.getElementById("trustFill");
+    const riskFill = document.getElementById("riskFill");
+    const readyFill = document.getElementById("readyFill");
+    const rankText = document.getElementById("rankText");
+    const scoreText = document.getElementById("scoreText");
+    const progressText = document.getElementById("progressText");
+
+    function clamp(n) { return Math.max(0, Math.min(100, n)); }
+
+    function computeRank() {
+      // Risk lower is better, so invert it for rank calc
+      const riskGood = 100 - risk;
+      const total = trust + ready + riskGood;
+      if (total >= 230) return "Vault Guardian";
+      if (total >= 205) return "Risk Wrangler";
+      if (total >= 175) return "Policy Pathfinder";
+      return "Chaos Intern (but learning fast)";
+    }
+
+    function updateMeters() {
+      trustFill.style.width = trust + "%";
+      riskFill.style.width = risk + "%";
+      readyFill.style.width = ready + "%";
+      scoreText.textContent = String(score);
+      rankText.textContent = computeRank();
+      progressText.textContent = endBlock.style.display === "block"
+        ? "Complete"
+        : `Scene ${sceneIndex + 1} of ${scenes.length}`;
+    }
+
+    function setFeedback(text, type) {
+      feedbackEl.textContent = text;
+      feedbackEl.className = "feedback " + type;
+      feedbackEl.style.display = "block";
+    }
+
+    function renderScene() {
+      locked = false;
+      feedbackEl.style.display = "none";
+      footerActionsEl.style.display = "none";
+      endBlock.style.display = "none";
+
+      const s = scenes[sceneIndex];
+      sceneTitleEl.textContent = s.title;
+      sceneTextEl.textContent = s.text;
+
+      choicesEl.innerHTML = "";
+      s.choices.forEach((c) => {
+        const btn = document.createElement("button");
+        btn.className = "choice";
+        btn.type = "button";
+        btn.textContent = c.label;
+        btn.addEventListener("click", () => choose(c));
+        choicesEl.appendChild(btn);
+      });
+
+      updateMeters();
+    }
+
+    function choose(choice) {
+      if (locked) return;
+      locked = true;
+
+      // disable choice buttons
+      Array.from(choicesEl.querySelectorAll("button.choice")).forEach(b => b.disabled = true);
+
+      trust = clamp(trust + choice.delta.trust * 6);
+      risk  = clamp(risk  + choice.delta.risk  * 6);
+      ready = clamp(ready + choice.delta.ready * 6);
+
+      // scoring: reward trust + readiness + lower risk
+      score += (choice.delta.trust * 3) + (choice.delta.ready * 3) + ((-choice.delta.risk) * 2);
+
+      let type = "warn";
+      if (choice.delta.trust + choice.delta.ready - choice.delta.risk >= 3) type = "good";
+      if (choice.delta.trust + choice.delta.ready - choice.delta.risk <= 0) type = "bad";
+
+      setFeedback(choice.feedback, type);
+      footerActionsEl.style.display = "flex";
+      updateMeters();
+    }
+
+    function endGame() {
+      choicesEl.innerHTML = "";
+      feedbackEl.style.display = "none";
+      footerActionsEl.style.display = "none";
+
+      const rank = computeRank();
+      const riskGood = 100 - risk;
+      const total = trust + ready + riskGood;
+
+      endSummary.textContent =
+        `MISSION COMPLETE.\n\nRank: ${rank}\nScore: ${score}\nTrust: ${trust} · Risk Control: ${riskGood} · Readiness: ${ready}\n\nWeek 1 takeaway: GRC is how leaders make consistent decisions that earn trust.`;
+      endBlock.style.display = "block";
+
+      // Completion code: stable enough for class use (not a security system)
+      const random3 = Math.floor(Math.random() * 900) + 100;
+      const code = `VONE-W1-${Math.max(0, score)}-${random3}`;
+      completionCodeEl.textContent = code;
+
+      updateMeters();
+    }
+
+    nextBtn.addEventListener("click", () => {
+      if (sceneIndex < scenes.length - 1) {
+        sceneIndex++;
+        renderScene();
+      } else {
+        endGame();
+      }
+    });
+
+    restartBtn.addEventListener("click", () => window.location.reload());
+    restartBtn2.addEventListener("click", () => window.location.reload());
+
+    copyBtn.addEventListener("click", async () => {
+      try {
+        await navigator.clipboard.writeText(completionCodeEl.textContent);
+        copyBtn.textContent = "Copied!";
+        setTimeout(() => (copyBtn.textContent = "Copy Code"), 900);
+      } catch {
+        copyBtn.textContent = "Copy manually";
+        setTimeout(() => (copyBtn.textContent = "Copy Code"), 900);
+      }
+    });
+
+    renderScene();
+  </script>
+</body>
+</html>
